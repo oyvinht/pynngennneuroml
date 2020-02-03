@@ -1,4 +1,5 @@
-import pynn_genn as sim
+import logging as log
+import pyNN.neuroml as sim
 
 class RunSim(object):
 
@@ -10,7 +11,7 @@ class RunSim(object):
         self._network = {}
         self._network['timestep'] = 0.1 #ms
         self._network['min_delay'] = 0.1 #ms
-        self._network['run_time'] = 10
+        self._network['run_time'] = 1000
         
         sim.setup(self._network['timestep'],
                   model_name=self.name,
@@ -28,7 +29,26 @@ class RunSim(object):
         self._network['projections'] = projs
 
         # Run
+        log.info('Running sim for {}ms.'.format(self._network['run_time']))
         sim.run(self._network['run_time'])
+
+        # Collect data
+        log.info('Collect data from all populations:')
+        for popname, pop in pops.items():
+            log.info(' -> Saving recorded data for "{}".'.format(popname))
+            data = pops['input'].get_data('spikes')
+            filename = '{}.spikes'.format(pop.label)
+            thefile = open(filename, 'w')
+            for spiketrain in data.segments[0].spiketrains:
+                source_id = spiketrain.annotations['source_id']
+                source_index = spiketrain.annotations['source_index']
+                for t in spiketrain:
+                    thefile.write('%s\t%f\n'%(source_index,t.magnitude/1000.))
+            thefile.close()
+
+
+            
+        # End
         sim.end()
 
     def gen_input_pop(self, params=None):
@@ -36,26 +56,30 @@ class RunSim(object):
             'cm': 0.09,  # nF
             'v_reset': -70.,  # mV
             'v_rest': -65.,  # mV
-            'v_thresh': VTHRESH,  # mV
+            'v_thresh': -55.0,  # mV
             'tau_m': 10.,  # ms
             'tau_refrac': 1.,  # ms
             'tau_syn_E': 1., # ms
             'tau_syn_I': 1., # ms
         }
         pop = sim.Population(5, # Num. neurons in pop.
-                             'IF_curr_exp', # Neuron type
+                             sim.IF_curr_exp, # Neuron type
                              params,
                              label='input')
+        #pop.record('v')
+        pop.record('spikes')
         return pop
 
     def gen_input_to_output_proj(self, params=None):
+        pops = self._network['populations']
         proj = sim.Projection(pops['input'],
                               pops['output'],
                               sim.AllToAllConnector(),
-                              sim.StaticSynapse(weight=iw,
+                              sim.StaticSynapse(weight=-5.0,
                                                 delay=0.1, # ms (equals timestep here)
-                                                label='input to output',
-                                                receptor_type='inhibitory'))
+                                                #label='input to output',
+                                                #receptor_type='inhibitory'
+                              ))
         return proj
                                    
 
@@ -64,14 +88,19 @@ class RunSim(object):
             'cm': 0.09,  # nF
             'v_reset': -70.,  # mV
             'v_rest': -65.,  # mV
-            'v_thresh': VTHRESH,  # mV
+            'v_thresh': -55.0,  # mV
             'tau_m': 10.,  # ms
             'tau_refrac': 1.,  # ms
             'tau_syn_E': 1., # ms
             'tau_syn_I': 1., # ms
         }
         pop = sim.Population(5,
-                             'IF_curr_exp',
+                             sim.IF_curr_exp,
                              params,
                              label='output')
+        #pop.record('v')
+        pop.record('spikes')
         return pop
+
+r = RunSim('Runner', {})
+r.run({})
