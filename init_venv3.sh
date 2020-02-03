@@ -13,7 +13,7 @@ source $VENV/bin/activate
 pip install matplotlib
 pip insntall numpy
 pip install pynn
-
+pip install pyneuroml
 
 # Get GeNN and PyNN_GeNN
 git clone https://github.com/genn-team/genn $GENN
