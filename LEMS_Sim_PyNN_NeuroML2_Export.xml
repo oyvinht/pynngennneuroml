@@ -1,0 +1,49 @@
+<Lems>
+    
+    <!-- 
+    This LEMS file has been generated from: 
+        PyNN v0.9.5
+        libNeuroML v0.2.47
+        pyNeuroML v0.3.15
+     -->
+    
+    <!-- Specify which component to run -->
+    <Target component="Sim_PyNN_NeuroML2_Export"/>
+
+    <!-- Include core NeuroML2 ComponentType definitions -->
+    <Include file="Cells.xml"/>
+    <Include file="Networks.xml"/>
+    <Include file="Simulation.xml"/>
+    
+    <Include file="PyNN.xml"/>
+    <Include file="PyNN_NeuroML2_Export.net.nml"/>
+   
+    <Simulation id="Sim_PyNN_NeuroML2_Export" length="1000.0ms" step="0.1ms" target="PyNN_NeuroML2_Export" seed="12345">  <!-- Note seed: ensures same random numbers used every run -->
+        
+        <Display id="input_v" title="input v" timeScale="1ms" xmin="-100.0" xmax="1100.0" ymin="-70" ymax="10">
+            <Line id="input v: cell 42" quantity="input/0/IF_curr_exp_input/v" scale="1mV" color="#d54f33" timeScale="1ms"/>
+            <Line id="input v: cell 43" quantity="input/1/IF_curr_exp_input/v" scale="1mV" color="#0534e4" timeScale="1ms"/>
+            <Line id="input v: cell 44" quantity="input/2/IF_curr_exp_input/v" scale="1mV" color="#98e752" timeScale="1ms"/>
+            <Line id="input v: cell 45" quantity="input/3/IF_curr_exp_input/v" scale="1mV" color="#bca074" timeScale="1ms"/>
+            <Line id="input v: cell 46" quantity="input/4/IF_curr_exp_input/v" scale="1mV" color="#632794" timeScale="1ms"/>
+        </Display>
+        
+        <OutputFile id="OF_input_v" fileName="input_v.dat">
+            <OutputColumn id="input_0_IF_curr_exp_input_v" quantity="input/0/IF_curr_exp_input/v"/> 
+            <OutputColumn id="input_1_IF_curr_exp_input_v" quantity="input/1/IF_curr_exp_input/v"/> 
+            <OutputColumn id="input_2_IF_curr_exp_input_v" quantity="input/2/IF_curr_exp_input/v"/> 
+            <OutputColumn id="input_3_IF_curr_exp_input_v" quantity="input/3/IF_curr_exp_input/v"/> 
+            <OutputColumn id="input_4_IF_curr_exp_input_v" quantity="input/4/IF_curr_exp_input/v"/> 
+        </OutputFile>
+        
+        <EventOutputFile id="Spikes_file_output" fileName="output.spikes" format="TIME_ID">
+            <EventSelection id="1" select="output/1/IF_curr_exp_output" eventPort="spike"/> 
+            <EventSelection id="2" select="output/2/IF_curr_exp_output" eventPort="spike"/> 
+            <EventSelection id="3" select="output/3/IF_curr_exp_output" eventPort="spike"/> 
+            <EventSelection id="4" select="output/4/IF_curr_exp_output" eventPort="spike"/> 
+            <EventSelection id="0" select="output/0/IF_curr_exp_output" eventPort="spike"/> 
+        </EventOutputFile>
+        
+    </Simulation>
+
+</Lems>
