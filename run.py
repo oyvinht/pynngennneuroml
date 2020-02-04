@@ -1,4 +1,6 @@
 import logging as log
+import numpy as np
+import pprint as pp
 import pyNN.neuroml as sim
 
 class RunSim(object):
@@ -8,6 +10,7 @@ class RunSim(object):
         self.name = name
 
     def run(self, params):
+        self._do_record = False
         self._network = {}
         self._network['timestep'] = 0.1 #ms
         self._network['min_delay'] = 0.1 #ms
@@ -33,20 +36,33 @@ class RunSim(object):
         sim.run(self._network['run_time'])
 
         # Collect data
-        log.info('Collect data from all populations:')
-        for popname, pop in pops.items():
-            log.info(' -> Saving recorded data for "{}".'.format(popname))
-            data = pops['input'].get_data('spikes')
-            filename = '{}.spikes'.format(pop.label)
-            thefile = open(filename, 'w')
-            for spiketrain in data.segments[0].spiketrains:
-                source_id = spiketrain.annotations['source_id']
-                source_index = spiketrain.annotations['source_index']
-                for t in spiketrain:
-                    thefile.write('%s\t%f\n'%(source_index,t.magnitude/1000.))
-            thefile.close()
-
-
+        if self._do_record:
+            log.info('Collect data from all populations:')
+            for popname, pop in pops.items():
+                log.info(' -> Saving recorded data for "{}".'.format(popname))
+                # Voltages
+                voltagedata = pop.get_data('v')
+                signal = voltagedata.segments[0].analogsignals[0]
+                source_ids = signal.annotations['source_ids']
+                for idx in range(len(source_ids)):
+                    s_id = source_ids[idx]
+                    filename = "%s_%s_%s.dat"%(pop.label,pop.id_to_index(s_id),signal.name)
+                    vm = signal.transpose()[idx]
+                    tt = np.array([t*sim.get_time_step()/1000. for t in range(len(vm))])
+                    times_vm = np.array([tt, vm/1000.]).transpose()
+                    np.savetxt(filename, times_vm, delimiter = '\t', fmt='%s')
+                
+                    # Spikes
+                    spikedata = pop.get_data('spikes')
+                    filename = '{}.spikes'.format(pop.label)
+                    thefile = open(filename, 'w')
+                    for spiketrain in spikedata.segments[0].spiketrains:
+                        source_id = spiketrain.annotations['source_id']
+                        source_index = spiketrain.annotations['source_index']
+                        #log.info(pp.pprint(vars(spiketrain)))
+                        for t in spiketrain:
+                            thefile.write('%s\t%f\n'%(source_index,t.magnitude/1000.))
+                            thefile.close()
             
         # End
         sim.end()
@@ -66,8 +82,9 @@ class RunSim(object):
                              sim.IF_curr_exp, # Neuron type
                              params,
                              label='input')
-        #pop.record('v')
-        pop.record('spikes')
+        if self._do_record:
+            pop.record('v')
+            pop.record('spikes')
         return pop
 
     def gen_input_to_output_proj(self, params=None):
@@ -98,8 +115,9 @@ class RunSim(object):
                              sim.IF_curr_exp,
                              params,
                              label='output')
-        #pop.record('v')
-        pop.record('spikes')
+        if self._do_record:
+            pop.record('v')
+            pop.record('spikes')
         return pop
 
 r = RunSim('Runner', {})
