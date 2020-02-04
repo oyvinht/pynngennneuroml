@@ -1,7 +1,8 @@
 import logging as log
 import numpy as np
 import pprint as pp
-import pyNN.neuroml as sim
+import pynn_genn as sim
+#import pyNN.neuroml as sim
 
 class RunSim(object):
 
@@ -10,7 +11,7 @@ class RunSim(object):
         self.name = name
 
     def run(self, params):
-        self._do_record = False
+        self._do_record = True
         self._network = {}
         self._network['timestep'] = 0.1 #ms
         self._network['min_delay'] = 0.1 #ms
@@ -53,17 +54,18 @@ class RunSim(object):
                     np.savetxt(filename, times_vm, delimiter = '\t', fmt='%s')
                 
                     # Spikes
+                    log.info(pop)
                     spikedata = pop.get_data('spikes')
                     filename = '{}.spikes'.format(pop.label)
                     thefile = open(filename, 'w')
                     for spiketrain in spikedata.segments[0].spiketrains:
                         source_id = spiketrain.annotations['source_id']
                         source_index = spiketrain.annotations['source_index']
-                        #log.info(pp.pprint(vars(spiketrain)))
+                        #     #log.info(pp.pprint(vars(spiketrain)))
                         for t in spiketrain:
                             thefile.write('%s\t%f\n'%(source_index,t.magnitude/1000.))
-                            thefile.close()
-            
+                    thefile.close()
+
         # End
         sim.end()
 
@@ -84,7 +86,7 @@ class RunSim(object):
                              label='input')
         if self._do_record:
             pop.record('v')
-            pop.record('spikes')
+            #pop.record('spikes')
         return pop
 
     def gen_input_to_output_proj(self, params=None):
@@ -117,7 +119,7 @@ class RunSim(object):
                              label='output')
         if self._do_record:
             pop.record('v')
-            pop.record('spikes')
+            #pop.record('spikes')
         return pop
 
 r = RunSim('Runner', {})
